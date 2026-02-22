@@ -123,17 +123,11 @@ Savings scale by number of **students, staff, and campus buildings**.
 
 ## 🏆 Alignment
 
-- 🇮🇳 India AI Buildathon 2026
+- 🇮🇳 AMD Slingshot Hackathon 2026
 - 🌱 UN SDG #7 — Affordable & Clean Energy  
 - 🌡️ UN SDG #13 — Climate Action  
 - 📋 Bureau of Energy Efficiency (BEE), India — Green Campus guidelines
 - 🎯 India Net Zero 2070 commitment
-
----
-
-## 👥 Team
-
-Built with ❤️ for India AI Buildathon 2026.
 
 ---
 
