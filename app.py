@@ -111,8 +111,11 @@ def run_isolation_forest(df, iso):
     try:
         labels = iso.predict(X)
         scores = iso.score_samples(X)
+        anomaly_pct = (labels == -1).mean() * 100
+        # Sanity check: <1% or >60% means out-of-distribution data, fall back to rule-based
+        if anomaly_pct < 1.0 or anomaly_pct > 60.0:
+            return run_rule_based(df)
     except Exception:
-        # If model still fails, fall back to rule-based silently
         return run_rule_based(df)
 
     df = df.copy()
@@ -156,12 +159,18 @@ def rf_forecast_24h(df, rf):
         featured = build_features(df).dropna()
         if len(featured) < 10:
             return None
+        # Rename to match training column names
+        featured = featured.rename(columns={
+            'Sub1': 'Sub_metering_1',
+            'Sub2': 'Sub_metering_2',
+            'Sub3': 'Sub_metering_3',
+        })
         RF_FEATURES = [
             'Hour','DayOfWeek','IsWeekend','Month',
             'lag_1h','lag_24h','lag_168h',
             'rolling_mean_24h','rolling_std_24h','rolling_max_24h','rolling_min_24h',
             'hour_sin','hour_cos','month_sin','month_cos',
-            'Sub1','Sub2','Sub3'
+            'Sub_metering_1','Sub_metering_2','Sub_metering_3'
         ]
         available = [c for c in RF_FEATURES if c in featured.columns]
         preds = rf.predict(featured[available].tail(24))
