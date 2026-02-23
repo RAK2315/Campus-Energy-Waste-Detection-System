@@ -378,7 +378,7 @@ if st.session_state.processed_data is not None:
     anomaly_pct = (n_anomalies / len(df)) * 100
     grade, grade_label, grade_color = get_energy_grade(anomaly_pct)
     mode_badge = "🤖 Isolation Forest" if st.session_state.model_mode == 'ml' else "📐 Rule-based"
-    has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
+    has_real_scores = ('risk_score' in df.columns and df['risk_score'].nunique() > 10)
 
     # ══════════════════════════════════════════
     # OVERVIEW
