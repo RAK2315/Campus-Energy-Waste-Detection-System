@@ -378,6 +378,7 @@ if st.session_state.processed_data is not None:
     anomaly_pct = (n_anomalies / len(df)) * 100
     grade, grade_label, grade_color = get_energy_grade(anomaly_pct)
     mode_badge = "🤖 Isolation Forest" if st.session_state.model_mode == 'ml' else "📐 Rule-based"
+    has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
 
     # ══════════════════════════════════════════
     # OVERVIEW
@@ -486,7 +487,6 @@ if st.session_state.processed_data is not None:
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Risk score histogram — ML only
-        has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
         if st.session_state.model_mode == 'ml' and has_real_scores:
             st.markdown("---")
             st.subheader("🎯 Isolation Forest — Anomaly Risk Score Distribution")
@@ -896,8 +896,10 @@ if st.session_state.processed_data is not None:
             if roi_months <= 12:
                 fig.add_vline(x=roi_months, line_dash='dot', line_color='blue',
                               annotation_text=f"Break-even: Month {roi_months:.1f}")
+            y_max = max(cumulative) * 1.2 if max(cumulative) > 0 else 1000
             fig.update_layout(height=380, xaxis_title="Month", yaxis_title="Cumulative Savings (₹)",
-                              xaxis=dict(tickmode='linear', tick0=1, dtick=1))
+                              xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+                              yaxis=dict(range=[0, y_max]))
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             # Implementation plan
