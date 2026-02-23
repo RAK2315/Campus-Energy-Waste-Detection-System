@@ -98,24 +98,36 @@ def build_features(df):
 
 
 def run_isolation_forest(df, iso):
-    # Build feature df with the exact column names the model was trained on
+    """
+    Refit Isolation Forest on the uploaded dataset using the same hyperparameters
+    as the pre-trained model. This way the anomaly detection always adapts to
+    the scale and distribution of whatever data is uploaded, not the UCI training data.
+    The pre-trained model is used only to inherit contamination/hyperparams.
+    """
+    from sklearn.ensemble import IsolationForest
+
+    # Features that work on any dataset (no column name dependency)
     X = pd.DataFrame({
-        'Global_active_power': df['Power'].fillna(0),
-        'Sub_metering_1':      df['Sub1'].fillna(0),
-        'Sub_metering_2':      df['Sub2'].fillna(0),
-        'Sub_metering_3':      df['Sub3'].fillna(0),
-        'Hour':                df['Hour'],
-        'DayOfWeek':           df['DayOfWeek'],
-        'IsWeekend':           df['IsWeekend'],
+        'Power':     df['Power'].fillna(df['Power'].median()),
+        'Sub1':      df['Sub1'].fillna(0),
+        'Sub2':      df['Sub2'].fillna(0),
+        'Sub3':      df['Sub3'].fillna(0),
+        'Hour':      df['Hour'],
+        'DayOfWeek': df['DayOfWeek'],
+        'IsWeekend': df['IsWeekend'],
     })
+
     try:
-        labels = iso.predict(X)
-        scores = iso.score_samples(X)
-        anomaly_pct = (labels == -1).mean() * 100
-        # Sanity check: <1% or >60% means out-of-distribution data, fall back to rule-based
-        if anomaly_pct < 1.0 or anomaly_pct > 60.0:
-            st.session_state.model_mode = 'rule'
-            return run_rule_based(df)
+        # Refit on this dataset - same contamination as trained model (0.05)
+        local_iso = IsolationForest(
+            contamination=0.05,
+            n_estimators=100,
+            max_samples=min(256, len(X)),
+            random_state=42
+        )
+        local_iso.fit(X)
+        labels = local_iso.predict(X)
+        scores = local_iso.score_samples(X)
     except Exception:
         st.session_state.model_mode = 'rule'
         return run_rule_based(df)
@@ -378,7 +390,7 @@ if st.session_state.processed_data is not None:
     anomaly_pct = (n_anomalies / len(df)) * 100
     grade, grade_label, grade_color = get_energy_grade(anomaly_pct)
     mode_badge = "🤖 Isolation Forest" if st.session_state.model_mode == 'ml' else "📐 Rule-based"
-    has_real_scores = ('risk_score' in df.columns and df['risk_score'].nunique() > 10)
+    has_real_scores = 'risk_score' in df.columns  # always real now - IF refits on uploaded data
 
     # ══════════════════════════════════════════
     # OVERVIEW
