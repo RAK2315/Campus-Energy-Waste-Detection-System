@@ -7,6 +7,7 @@
 🔗 **[campus-energy-waste-detection-system.streamlit.app](https://campus-energy-waste-detection-system.streamlit.app/)**
 
 Or click **"Try Demo Data"** inside the app to explore instantly without uploading anything.
+
 ---
 
 ## 📌 What It Does
