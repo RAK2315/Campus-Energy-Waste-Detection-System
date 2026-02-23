@@ -114,8 +114,10 @@ def run_isolation_forest(df, iso):
         anomaly_pct = (labels == -1).mean() * 100
         # Sanity check: <1% or >60% means out-of-distribution data, fall back to rule-based
         if anomaly_pct < 1.0 or anomaly_pct > 60.0:
+            st.session_state.model_mode = 'rule'
             return run_rule_based(df)
     except Exception:
+        st.session_state.model_mode = 'rule'
         return run_rule_based(df)
 
     df = df.copy()
@@ -483,7 +485,8 @@ if st.session_state.processed_data is not None:
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Risk score histogram — ML only
-        if st.session_state.model_mode == 'ml' and 'risk_score' in df.columns:
+        has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
+        if st.session_state.model_mode == 'ml' and has_real_scores:
             st.markdown("---")
             st.subheader("🎯 Isolation Forest — Anomaly Risk Score Distribution")
             fig = go.Figure()
@@ -509,6 +512,7 @@ if st.session_state.processed_data is not None:
 
         waste_df  = df[df['is_anomaly']==1]
         normal_df = df[df['is_anomaly']==0]
+        has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
 
         if len(waste_df) == 0:
             st.success("✅ No significant waste detected — your campus is running efficiently!")
@@ -603,7 +607,7 @@ if st.session_state.processed_data is not None:
                 st.caption("💡 Night-time + weekend waste = quickest fixes (just update schedules).")
 
             # Risk score over time — ML only
-            if st.session_state.model_mode == 'ml' and 'risk_score' in df.columns:
+            if st.session_state.model_mode == 'ml' and has_real_scores:
                 st.markdown("---")
                 st.subheader("🎯 Isolation Forest — Continuous Risk Score Over Time")
                 sample = df.tail(min(1500, len(df)))
