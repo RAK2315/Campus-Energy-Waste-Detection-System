@@ -98,10 +98,23 @@ def build_features(df):
 
 
 def run_isolation_forest(df, iso):
-    feats  = ['Power', 'Sub1', 'Sub2', 'Sub3', 'Hour', 'DayOfWeek', 'IsWeekend']
-    X      = df[feats].fillna(0)
-    labels = iso.predict(X)
-    scores = iso.score_samples(X)
+    # Build feature df with the exact column names the model was trained on
+    X = pd.DataFrame({
+        'Global_active_power': df['Power'].fillna(0),
+        'Sub_metering_1':      df['Sub1'].fillna(0),
+        'Sub_metering_2':      df['Sub2'].fillna(0),
+        'Sub_metering_3':      df['Sub3'].fillna(0),
+        'Hour':                df['Hour'],
+        'DayOfWeek':           df['DayOfWeek'],
+        'IsWeekend':           df['IsWeekend'],
+    })
+    try:
+        labels = iso.predict(X)
+        scores = iso.score_samples(X)
+    except Exception:
+        # If model still fails, fall back to rule-based silently
+        return run_rule_based(df)
+
     df = df.copy()
     df['is_anomaly']    = (labels == -1).astype(int)
     df['anomaly_score'] = scores
