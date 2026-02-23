@@ -332,6 +332,7 @@ elif st.session_state.processed_data is None:
     }), use_container_width=True)
 
     if st.button("🎮 Try Demo Data (90-day campus simulation)", type="secondary"):
+        st.session_state.df = None  # clear any previously uploaded file
         np.random.seed(42)
         dates = pd.date_range('2024-01-01', periods=2160, freq='h')
         base  = 50 + 30 * np.sin(np.arange(2160) * 2 * np.pi / 24)
@@ -512,7 +513,7 @@ if st.session_state.processed_data is not None:
 
         waste_df  = df[df['is_anomaly']==1]
         normal_df = df[df['is_anomaly']==0]
-        has_real_scores = ('risk_score' in df.columns and df['risk_score'].std() > 1.0)
+
 
         if len(waste_df) == 0:
             st.success("✅ No significant waste detected — your campus is running efficiently!")
