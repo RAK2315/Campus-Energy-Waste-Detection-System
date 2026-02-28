@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 # ─────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────
-st.set_page_config(page_title="Campus Energy Waste Detector", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="WattWise — Campus Energy Intelligence", page_icon="⚡", layout="wide")
 
 st.markdown("""
 <style>
@@ -237,6 +237,88 @@ hr {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: rgba(255,107,43,0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+/* Fix sidebar collapse button always visible */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--orange) !important;
+}
+[data-testid="collapsedControl"]:hover {
+    background: var(--card) !important;
+    border-color: rgba(255,107,43,0.3) !important;
+}
+section[data-testid="stSidebar"][aria-expanded="false"] {
+    display: none !important;
+}
+button[data-testid="baseButton-headerNoPadding"] {
+    color: var(--orange) !important;
+}
+
+/* Fix emoji white background */
+.stMarkdown p, .stMarkdown div, .stMarkdown span {
+    background: transparent !important;
+}
+.stAlert > div {
+    background: transparent !important;
+}
+/* Remove white box from emoji in st.success/warning/info/error */
+[data-testid="stAlert"] > div > div > div {
+    background: transparent !important;
+}
+[data-testid="stNotificationContentSuccess"],
+[data-testid="stNotificationContentWarning"],
+[data-testid="stNotificationContentInfo"],
+[data-testid="stNotificationContentError"] {
+    background: transparent !important;
+}
+
+/* Fix all text colors */
+p, li, span, label, div {
+    color: var(--white);
+}
+.stMarkdown { color: var(--white) !important; }
+
+/* Fix selectbox dropdown */
+[data-baseweb="select"] {
+    background: var(--card) !important;
+}
+[data-baseweb="select"] > div {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--white) !important;
+}
+[data-baseweb="popover"] {
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+}
+[role="option"] {
+    background: var(--bg2) !important;
+    color: var(--white) !important;
+}
+[role="option"]:hover {
+    background: var(--card) !important;
+}
+
+/* Number input */
+[data-baseweb="input"] {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+}
+[data-baseweb="input"] input {
+    background: var(--card) !important;
+    color: var(--white) !important;
+}
+
+/* Slider */
+[data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
+    background: var(--orange) !important;
+}
+[data-testid="stSlider"] div[data-testid="stTickBar"] {
+    color: var(--muted) !important;
+}
 
 /* Custom info boxes matching theme */
 .info-box {
@@ -545,7 +627,7 @@ st.markdown("""
     AMD Slingshot Hackathon · Team Sigmoid
   </div>
   <h1 style="font-family:Syne,sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-0.03em;color:#f0ede8;margin:0;line-height:1.1">
-    ⚡ Campus Energy Waste <span style="color:#ff6b2b">Detector</span>
+    ⚡ WattWise <span style="color:#ff6b2b">.</span>
   </h1>
   <p style="color:#6b6878;font-size:0.95rem;margin-top:0.5rem;font-weight:300">
     ML-powered energy monitoring — upload your CSV, get waste insights in seconds
@@ -1319,10 +1401,10 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align:center;padding:2rem 0 1rem;border-top:1px solid rgba(255,255,255,0.06);margin-top:2rem">
   <span style="font-family:Syne,sans-serif;font-weight:800;color:#f0ede8;font-size:0.9rem">
-    ⚡ Sigmoid<span style="color:#ff6b2b">.</span>
+    ⚡ WattWise<span style="color:#ff6b2b">.</span>
   </span>
   <span style="color:#6b6878;font-size:0.8rem;margin-left:1rem">
-    AMD Slingshot Hackathon · Isolation Forest + Random Forest · Leader: Rehaan
+    AMD Slingshot Hackathon · WattWise · Isolation Forest + Random Forest
   </span>
 </div>
 """, unsafe_allow_html=True)

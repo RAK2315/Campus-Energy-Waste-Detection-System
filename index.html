@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campus Energy Waste Detector — Sigmoid</title>
+<title>WattWise — Campus Energy Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -571,6 +571,18 @@
   /* COUNTER ANIMATION */
   .count-up { display: inline-block; }
 
+  /* Fix emoji rendering — no white box */
+  .problem-points li::before,
+  .feature-icon,
+  .impact-icon,
+  .step-icon {
+    background: transparent !important;
+    -webkit-text-fill-color: initial;
+    font-style: normal;
+  }
+  /* Remove any inherited white bg from emoji containers */
+  [data-icon] { background: transparent !important; }
+
   @media (max-width: 768px) {
     nav { padding: 1rem 1.5rem; }
     .nav-links { display: none; }
@@ -593,7 +605,7 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">⚡ Sigmoid<span>.</span></div>
+  <div class="nav-logo">⚡ WattWise<span>.</span></div>
   <div class="nav-links">
     <a href="#problem">Problem</a>
     <a href="#how">How It Works</a>
@@ -608,7 +620,7 @@
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
 
-  <div class="hero-tag">AMD Slingshot Hackathon · Team Sigmoid</div>
+  <div class="hero-tag">AMD Slingshot Hackathon · Team Sigmoid · WattWise</div>
 
   <h1>Stop paying for<br>energy <em>nobody</em><br>is <span class="accent">using.</span></h1>
 
@@ -872,8 +884,8 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-left">⚡ Sigmoid<span>.</span></div>
-  <div class="footer-right">AMD Slingshot Hackathon · Team Sigmoid · Leader: Rehaan</div>
+  <div class="footer-left">⚡ WattWise<span>.</span></div>
+  <div class="footer-right">AMD Slingshot Hackathon · WattWise · Team Sigmoid · Leader: Rehaan</div>
 </footer>
 
 <script>
