@@ -16,14 +16,279 @@ st.set_page_config(page_title="Campus Energy Waste Detector", page_icon="⚡", l
 
 st.markdown("""
 <style>
-    .info-box, .warning-box, .success-box, .danger-box, .metric-box {
-        padding: 15px; border-radius: 8px; color: #000000; margin: 10px 0;
-    }
-    .info-box    { background-color: #e3f2fd; border-left: 5px solid #2196f3; }
-    .warning-box { background-color: #fff3cd; border-left: 5px solid #ffc107; }
-    .success-box { background-color: #d4edda; border-left: 5px solid #28a745; }
-    .danger-box  { background-color: #f8d7da; border-left: 5px solid #dc3545; }
-    .metric-box  { background-color: #f3e5f5; border-left: 5px solid #9c27b0; }
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ── CORE THEME ── */
+:root {
+    --bg:      #0a0a0f;
+    --bg2:     #0f0f1a;
+    --card:    #111118;
+    --orange:  #ff6b2b;
+    --orange2: #ff8c55;
+    --white:   #f0ede8;
+    --muted:   #6b6878;
+    --border:  rgba(255,255,255,0.06);
+}
+
+/* Main app background */
+.stApp {
+    background: var(--bg) !important;
+    color: var(--white) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+/* Hide default streamlit elements */
+#MainMenu, footer, header { visibility: hidden; }
+.stDeployButton { display: none; }
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: var(--bg2) !important;
+    border-right: 1px solid var(--border) !important;
+}
+[data-testid="stSidebar"] * {
+    color: var(--white) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+[data-testid="stSidebar"] .stRadio label {
+    color: var(--muted) !important;
+    font-size: 0.85rem !important;
+}
+[data-testid="stSidebar"] .stRadio [aria-checked="true"] + div {
+    color: var(--orange) !important;
+}
+
+/* Top title */
+h1 {
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 800 !important;
+    color: var(--white) !important;
+    letter-spacing: -0.03em !important;
+}
+h2, h3 {
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 700 !important;
+    color: var(--white) !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* Metrics */
+[data-testid="stMetric"] {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    padding: 1.2rem 1.4rem !important;
+    transition: border-color 0.3s !important;
+}
+[data-testid="stMetric"]:hover {
+    border-color: rgba(255,107,43,0.3) !important;
+}
+[data-testid="stMetricLabel"] {
+    color: var(--muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 400 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+}
+[data-testid="stMetricValue"] {
+    color: var(--white) !important;
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 1.6rem !important;
+}
+[data-testid="stMetricDelta"] { color: var(--orange) !important; }
+
+/* Buttons */
+.stButton > button {
+    background: var(--orange) !important;
+    color: #0a0a0f !important;
+    border: none !important;
+    border-radius: 2px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    padding: 0.6rem 1.5rem !important;
+    transition: all 0.25s !important;
+    letter-spacing: 0.01em !important;
+}
+.stButton > button:hover {
+    background: var(--orange2) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 25px rgba(255,107,43,0.3) !important;
+}
+.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--border) !important;
+}
+.stButton > button[kind="secondary"]:hover {
+    color: var(--white) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+}
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+    background: var(--card) !important;
+    border: 1px dashed rgba(255,107,43,0.3) !important;
+    border-radius: 4px !important;
+    padding: 1rem !important;
+}
+[data-testid="stFileUploader"] * { color: var(--muted) !important; }
+
+/* Selectbox / inputs */
+[data-testid="stSelectbox"] > div > div,
+[data-testid="stNumberInput"] input,
+[data-testid="stSlider"] {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--white) !important;
+    border-radius: 2px !important;
+}
+
+/* Dataframe */
+[data-testid="stDataFrame"] {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+}
+[data-testid="stDataFrame"] th {
+    background: var(--bg2) !important;
+    color: var(--muted) !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+}
+[data-testid="stDataFrame"] td {
+    color: var(--white) !important;
+    border-color: var(--border) !important;
+}
+
+/* Progress bar */
+[data-testid="stProgress"] > div > div {
+    background: var(--orange) !important;
+}
+[data-testid="stProgress"] > div {
+    background: var(--card) !important;
+}
+
+/* Alerts / status */
+[data-testid="stAlert"] {
+    background: var(--card) !important;
+    border-radius: 4px !important;
+    border-left-width: 3px !important;
+}
+
+/* Success */
+.stSuccess {
+    background: rgba(40,167,69,0.08) !important;
+    border-color: #28a745 !important;
+    color: var(--white) !important;
+}
+/* Warning */
+.stWarning {
+    background: rgba(255,107,43,0.08) !important;
+    border-color: var(--orange) !important;
+    color: var(--white) !important;
+}
+/* Error */
+.stError {
+    background: rgba(220,53,69,0.08) !important;
+    border-color: #dc3545 !important;
+    color: var(--white) !important;
+}
+/* Info */
+.stInfo {
+    background: rgba(33,150,243,0.08) !important;
+    border-color: #2196f3 !important;
+    color: var(--white) !important;
+}
+
+/* Tabs */
+[data-testid="stTabs"] [role="tab"] {
+    color: var(--muted) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.85rem !important;
+    border-bottom: 2px solid transparent !important;
+}
+[data-testid="stTabs"] [aria-selected="true"] {
+    color: var(--orange) !important;
+    border-bottom-color: var(--orange) !important;
+}
+
+/* Captions */
+[data-testid="stCaptionContainer"] {
+    color: var(--muted) !important;
+    font-size: 0.78rem !important;
+}
+
+/* Divider */
+hr {
+    border-color: var(--border) !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* Plotly charts — dark background to match */
+.js-plotly-plot .plotly .bg {
+    fill: var(--card) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,107,43,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+/* Custom info boxes matching theme */
+.info-box {
+    background: rgba(33,150,243,0.08) !important;
+    border-left: 3px solid #2196f3 !important;
+    border-radius: 2px !important;
+    padding: 1rem 1.2rem !important;
+    color: var(--white) !important;
+    margin: 0.8rem 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+.warning-box {
+    background: rgba(255,107,43,0.08) !important;
+    border-left: 3px solid var(--orange) !important;
+    border-radius: 2px !important;
+    padding: 1rem 1.2rem !important;
+    color: var(--white) !important;
+    margin: 0.8rem 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+.success-box {
+    background: rgba(40,167,69,0.08) !important;
+    border-left: 3px solid #28a745 !important;
+    border-radius: 2px !important;
+    padding: 1rem 1.2rem !important;
+    color: var(--white) !important;
+    margin: 0.8rem 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+.danger-box {
+    background: rgba(220,53,69,0.08) !important;
+    border-left: 3px solid #dc3545 !important;
+    border-radius: 2px !important;
+    padding: 1rem 1.2rem !important;
+    color: var(--white) !important;
+    margin: 0.8rem 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+.metric-box {
+    background: rgba(156,39,176,0.08) !important;
+    border-left: 3px solid #9c27b0 !important;
+    border-radius: 2px !important;
+    padding: 1rem 1.2rem !important;
+    color: var(--white) !important;
+    margin: 0.8rem 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -49,6 +314,35 @@ def load_models():
         return None, None, None, False
 
 iso_model, rf_model, feature_info, models_loaded = load_models()
+
+def dark_chart(fig, height=380):
+    """Apply consistent dark theme to all plotly charts."""
+    fig.update_layout(
+        height=height,
+        paper_bgcolor='#111118',
+        plot_bgcolor='#111118',
+        font=dict(family='DM Sans', color='#6b6878', size=12),
+        title_font=dict(family='Syne', color='#f0ede8', size=14),
+        xaxis=dict(
+            gridcolor='rgba(255,255,255,0.04)',
+            linecolor='rgba(255,255,255,0.06)',
+            tickcolor='rgba(255,255,255,0.06)',
+            tickfont=dict(color='#6b6878', size=11),
+        ),
+        yaxis=dict(
+            gridcolor='rgba(255,255,255,0.04)',
+            linecolor='rgba(255,255,255,0.06)',
+            tickcolor='rgba(255,255,255,0.06)',
+            tickfont=dict(color='#6b6878', size=11),
+        ),
+        legend=dict(
+            bgcolor='rgba(0,0,0,0)',
+            bordercolor='rgba(255,255,255,0.06)',
+            font=dict(color='#6b6878', size=11),
+        ),
+        margin=dict(l=10, r=10, t=40, b=10),
+    )
+    return fig
 
 # ─────────────────────────────────────────────
 # HELPER FUNCTIONS
@@ -245,8 +539,19 @@ def process_uploaded_data(raw_df, datetime_col, power_col, sub1_col, sub2_col, s
 # ─────────────────────────────────────────────
 # TITLE
 # ─────────────────────────────────────────────
-st.title("⚡ Campus Energy Waste Detection System")
-st.markdown("ML-powered energy monitoring for smarter, greener campuses — India AI Buildathon 2026")
+st.markdown("""
+<div style="padding:1.5rem 0 0.5rem">
+  <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#ff6b2b;margin-bottom:0.5rem">
+    AMD Slingshot Hackathon · Team Sigmoid
+  </div>
+  <h1 style="font-family:Syne,sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-0.03em;color:#f0ede8;margin:0;line-height:1.1">
+    ⚡ Campus Energy Waste <span style="color:#ff6b2b">Detector</span>
+  </h1>
+  <p style="color:#6b6878;font-size:0.95rem;margin-top:0.5rem;font-weight:300">
+    ML-powered energy monitoring — upload your CSV, get waste insights in seconds
+  </p>
+</div>
+""", unsafe_allow_html=True)
 
 if models_loaded:
     st.success("🤖 **ML Models Active:** Isolation Forest (anomaly detection) + Random Forest Regressor "
@@ -448,6 +753,7 @@ if st.session_state.processed_data is not None:
         fig.update_layout(title="Campus Power Trend with Detected Waste Events", height=380,
                           xaxis_title="Time", yaxis_title="Power (kW)",
                           legend=dict(orientation='h', yanchor='bottom', y=1.02))
+        fig = dark_chart(fig)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         col1, col2, col3 = st.columns(3)
@@ -456,6 +762,7 @@ if st.session_state.processed_data is not None:
             colors = ['#dc3545' if (h<6 or h>21) else '#ffc107' if h>18 else '#28a745' for h in hourly.index]
             fig = go.Figure(go.Bar(x=hourly.index, y=hourly.values, marker_color=colors))
             fig.update_layout(title="⏰ Avg Load by Hour", height=300, xaxis_title="Hour of Day", yaxis_title="kW")
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
@@ -464,6 +771,7 @@ if st.session_state.processed_data is not None:
             dcolors= ['#6c757d' if i>=5 else '#2196f3' for i in range(7)]
             fig = go.Figure(go.Bar(x=days, y=weekly.values, marker_color=dcolors))
             fig.update_layout(title="📅 Avg Load by Day", height=300, yaxis_title="kW")
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         with col3:
@@ -479,6 +787,7 @@ if st.session_state.processed_data is not None:
                              color_discrete_sequence=px.colors.qualitative.Set2)
                 fig.update_traces(textposition='inside', textinfo='label+percent')
                 fig.update_layout(title="🏫 Zone Breakdown", height=300, showlegend=False)
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             else:
                 st.markdown("""<div class="info-box" style="margin-top:50px">
@@ -496,6 +805,7 @@ if st.session_state.processed_data is not None:
                 text=[f"{v:.1f}" for v in monthly.values], textposition='outside'
             ))
             fig.update_layout(title="📆 Monthly Average Load", height=300, yaxis_title="kW")
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Risk score histogram — ML only
@@ -512,6 +822,7 @@ if st.session_state.processed_data is not None:
             fig.update_layout(barmode='overlay', height=300,
                               xaxis_title="Risk Score (0=safe → 100=high waste)",
                               yaxis_title="Count", legend=dict(orientation='h'))
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             st.caption("Unlike rule-based detection, the Isolation Forest assigns a continuous risk score to "
                        "every hour — not just a binary flag. The further right the red bars, the more severe the waste.")
@@ -557,6 +868,7 @@ if st.session_state.processed_data is not None:
                     hovertemplate="Day: %{y}<br>Hour: %{x}<br>Waste Rate: %{z:.1%}<extra></extra>"
                 ))
                 fig.update_layout(title="Darker = Higher Waste Rate", height=300, xaxis_title="Hour of Day")
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 st.caption("💡 Identify structural patterns — labs on overnight, AC running all weekend.")
 
@@ -570,6 +882,7 @@ if st.session_state.processed_data is not None:
                 fig.update_layout(barmode='overlay', height=300,
                                   xaxis_title="Power (kW)", yaxis_title="Count",
                                   legend=dict(orientation='h'))
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 st.caption("💡 The further red shifts from blue, the more severe your campus waste problem is.")
 
@@ -583,6 +896,7 @@ if st.session_state.processed_data is not None:
                 fig = go.Figure(go.Bar(x=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
                                        y=counts, marker_color=colors, text=counts, textposition='outside'))
                 fig.update_layout(title="🗓️ Waste Events by Day", height=300, yaxis_title="Events")
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             with col2:
@@ -593,6 +907,7 @@ if st.session_state.processed_data is not None:
                 fig = go.Figure(go.Bar(x=list(range(24)), y=hcounts, marker_color=hcolors))
                 fig.update_layout(title="⏰ Waste Events by Hour", height=300,
                                   xaxis_title="Hour", yaxis_title="Events")
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             # Trend + reason
@@ -606,6 +921,7 @@ if st.session_state.processed_data is not None:
                 fig.add_hline(y=anomaly_pct, line_dash='dot', line_color='orange',
                               annotation_text=f"Avg: {anomaly_pct:.1f}%")
                 fig.update_layout(height=280, yaxis_title="% Waste Hours")
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 st.caption("💡 Upward trend = worsening waste. Act before it compounds further.")
 
@@ -616,6 +932,7 @@ if st.session_state.processed_data is not None:
                              color_discrete_sequence=['#dc3545','#ff7043','#ffc107'])
                 fig.update_traces(textposition='inside', textinfo='label+percent')
                 fig.update_layout(height=280, showlegend=False)
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 st.caption("💡 Night-time + weekend waste = quickest fixes (just update schedules).")
 
@@ -641,6 +958,7 @@ if st.session_state.processed_data is not None:
                               annotation_text="Risk threshold: 50")
                 fig.update_layout(height=320, yaxis_title="Risk Score (0–100)",
                                   legend=dict(orientation='h'))
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 st.caption("Each point = one campus hour. Red dots above 50 are highest-priority events to investigate first.")
 
@@ -740,6 +1058,7 @@ if st.session_state.processed_data is not None:
             fig.update_layout(title="24-Hour Campus Load Forecast", height=420,
                               xaxis_title="Hour of Day", yaxis_title="Power (kW)",
                               legend=dict(orientation='h', yanchor='bottom', y=1.02))
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
@@ -912,6 +1231,7 @@ if st.session_state.processed_data is not None:
             fig.update_layout(height=380, xaxis_title="Month", yaxis_title="Cumulative Savings (₹)",
                               xaxis=dict(tickmode='linear', tick0=1, dtick=1),
                               yaxis=dict(range=[0, y_max]))
+            fig = dark_chart(fig)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             # Implementation plan
@@ -942,6 +1262,7 @@ if st.session_state.processed_data is not None:
                              color_discrete_sequence=px.colors.sequential.Greens_r)
                 fig.update_traces(textposition='inside', textinfo='label+percent')
                 fig.update_layout(title="Savings by Campus Zone", height=340, showlegend=False)
+                fig = dark_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
             # Environmental impact
@@ -995,7 +1316,13 @@ if st.session_state.processed_data is not None:
             """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown('<div style="text-align:center;color:#666;font-size:0.85rem">'
-            '⚡ Campus Energy Waste Detection System | India AI Buildathon 2026 | '
-            'Isolation Forest + Random Forest ML Pipeline'
-            '</div>', unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align:center;padding:2rem 0 1rem;border-top:1px solid rgba(255,255,255,0.06);margin-top:2rem">
+  <span style="font-family:Syne,sans-serif;font-weight:800;color:#f0ede8;font-size:0.9rem">
+    ⚡ Sigmoid<span style="color:#ff6b2b">.</span>
+  </span>
+  <span style="color:#6b6878;font-size:0.8rem;margin-left:1rem">
+    AMD Slingshot Hackathon · Isolation Forest + Random Forest · Leader: Rehaan
+  </span>
+</div>
+""", unsafe_allow_html=True)
