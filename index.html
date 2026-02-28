@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Energy Waste Detector — Sigmoid</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0f0f1a;
+    --bg3: #13131f;
+    --orange: #ff6b2b;
+    --orange2: #ff8c55;
+    --orange-glow: rgba(255, 107, 43, 0.15);
+    --white: #f0ede8;
+    --muted: #6b6878;
+    --card: #111118;
+    --border: rgba(255,255,255,0.06);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 10px; height: 10px;
+    background: var(--orange);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,107,43,0.4);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.18s ease;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1; opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.4rem 4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .nav-logo span { color: var(--orange); }
+  .nav-links { display: flex; gap: 2.5rem; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.85rem; font-weight: 400;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+  .nav-cta {
+    background: var(--orange);
+    color: #0a0a0f !important;
+    padding: 0.55rem 1.4rem;
+    border-radius: 2px;
+    font-weight: 500 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+    transition: background 0.2s, transform 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--orange2) !important; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 8rem 4rem 4rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,43,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,43,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,107,43,0.08) 0%, transparent 70%);
+    top: -100px; right: -200px;
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,107,43,0.1);
+    border: 1px solid rgba(255,107,43,0.25);
+    color: var(--orange);
+    padding: 0.35rem 0.9rem;
+    border-radius: 2px;
+    font-size: 0.75rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 2rem;
+    opacity: 0; animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 800px;
+    margin-bottom: 2rem;
+    opacity: 0; animation: fadeUp 0.7s ease 0.4s forwards;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,107,43,0.6);
+  }
+  .hero h1 .accent { color: var(--orange); }
+
+  .hero-sub {
+    font-size: 1.15rem; font-weight: 300;
+    color: var(--muted); max-width: 520px;
+    line-height: 1.7; margin-bottom: 3rem;
+    opacity: 0; animation: fadeUp 0.7s ease 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex; gap: 1rem; align-items: center;
+    opacity: 0; animation: fadeUp 0.7s ease 0.8s forwards;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: var(--orange);
+    color: #0a0a0f;
+    padding: 0.9rem 2rem;
+    border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500; font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,107,43,0.35); }
+  .btn-primary:hover::after { opacity: 1; }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    color: var(--muted);
+    padding: 0.9rem 1.5rem;
+    border-radius: 2px;
+    font-size: 0.9rem; font-weight: 400;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.25s ease;
+  }
+  .btn-secondary:hover { color: var(--white); border-color: rgba(255,255,255,0.15); }
+
+  /* STATS TICKER */
+  .stats-bar {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 4rem;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: var(--bg2);
+    position: relative; z-index: 2;
+  }
+  .stat-item {
+    padding: 0 2rem;
+    border-right: 1px solid var(--border);
+    opacity: 0; animation: fadeUp 0.5s ease forwards;
+  }
+  .stat-item:first-child { padding-left: 0; }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:nth-child(1) { animation-delay: 0.1s; }
+  .stat-item:nth-child(2) { animation-delay: 0.2s; }
+  .stat-item:nth-child(3) { animation-delay: 0.3s; }
+  .stat-item:nth-child(4) { animation-delay: 0.4s; }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem; font-weight: 800;
+    color: var(--orange);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.8rem; color: var(--muted);
+    margin-top: 0.3rem; font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  /* SECTION BASE */
+  section { padding: 7rem 4rem; position: relative; }
+  .section-tag {
+    font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    line-height: 1.05; margin-bottom: 1.2rem;
+  }
+  .section-sub {
+    color: var(--muted); font-size: 1rem;
+    line-height: 1.7; max-width: 480px;
+  }
+
+  /* PROBLEM SECTION */
+  .problem {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .problem-inner {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6rem; align-items: center; max-width: 1200px; margin: 0 auto;
+  }
+  .problem-visual {
+    position: relative;
+    height: 360px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .problem-visual::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(255,107,43,0.03) 40px,
+      rgba(255,107,43,0.03) 41px
+    );
+  }
+  .waste-bars {
+    display: flex; align-items: flex-end; gap: 8px;
+    height: 200px; padding: 0 2rem;
+    position: relative; z-index: 1;
+  }
+  .waste-bar {
+    width: 28px; border-radius: 2px 2px 0 0;
+    background: rgba(255,255,255,0.06);
+    position: relative; transition: all 0.3s;
+    animation: barGrow 1s ease forwards;
+    transform-origin: bottom;
+  }
+  .waste-bar.red {
+    background: var(--orange);
+    box-shadow: 0 0 20px rgba(255,107,43,0.4);
+  }
+  .waste-bar.red::after {
+    content: '⚠';
+    position: absolute; top: -24px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes barGrow {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+
+  .problem-points { list-style: none; margin-top: 2rem; }
+  .problem-points li {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem; line-height: 1.6;
+    color: rgba(240,237,232,0.8);
+  }
+  .problem-points li:last-child { border-bottom: none; }
+  .problem-points li::before {
+    content: attr(data-icon);
+    font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem;
+  }
+
+  /* HOW IT WORKS */
+  .how { max-width: 1200px; margin: 0 auto; }
+  .steps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 4rem; border-radius: 4px; overflow: hidden;
+  }
+  .step {
+    background: var(--card);
+    padding: 2.5rem;
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+  .step:hover { background: #16161f; }
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem; font-weight: 800;
+    color: rgba(255,107,43,0.12);
+    line-height: 1; margin-bottom: 1.2rem;
+    transition: color 0.3s;
+  }
+  .step:hover .step-num { color: rgba(255,107,43,0.25); }
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: 0.7rem; letter-spacing: -0.02em;
+  }
+  .step-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+  .step-icon {
+    position: absolute; bottom: 1.5rem; right: 1.5rem;
+    font-size: 1.8rem; opacity: 0.15;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .step:hover .step-icon { opacity: 0.4; transform: scale(1.1) rotate(-5deg); }
+
+  /* ML MODELS */
+  .models {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .models-inner {
+    max-width: 1200px; margin: 0 auto;
+  }
+  .models-header {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: end; margin-bottom: 4rem;
+  }
+  .models-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .model-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 2.5rem;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .model-card:hover {
+    border-color: rgba(255,107,43,0.3);
+    transform: translateY(-4px);
+  }
+  .model-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--orange);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .model-card:hover::before { transform: scaleX(1); }
+  .model-tag {
+    display: inline-block;
+    background: rgba(255,107,43,0.1);
+    color: var(--orange);
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.25rem 0.6rem; border-radius: 2px;
+    margin-bottom: 1.2rem;
+  }
+  .model-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem; font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 0.8rem;
+  }
+  .model-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.5rem; }
+  .model-metric {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .model-metric-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800;
+    color: var(--orange); letter-spacing: -0.04em;
+  }
+  .model-metric-label { font-size: 0.8rem; color: var(--muted); }
+
+  /* FEATURES */
+  .features-inner { max-width: 1200px; margin: 0 auto; }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 4rem; border-radius: 4px; overflow: hidden;
+  }
+  .feature-card {
+    background: var(--card); padding: 2rem;
+    transition: background 0.3s;
+    position: relative;
+  }
+  .feature-card:hover { background: #14141e; }
+  .feature-icon {
+    font-size: 1.5rem; margin-bottom: 1rem;
+    display: block;
+  }
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem; font-weight: 700;
+    margin-bottom: 0.5rem; letter-spacing: -0.01em;
+  }
+  .feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+  /* IMPACT */
+  .impact {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+  }
+  .impact-inner { max-width: 1200px; margin: 0 auto; }
+  .impact-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem; margin-top: 4rem;
+  }
+  .impact-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 2.5rem;
+    display: flex; gap: 1.5rem; align-items: flex-start;
+    transition: border-color 0.3s;
+  }
+  .impact-card:hover { border-color: rgba(255,107,43,0.2); }
+  .impact-icon {
+    font-size: 2rem; flex-shrink: 0;
+    width: 56px; height: 56px;
+    background: rgba(255,107,43,0.08);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .impact-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;
+  }
+  .impact-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* CTA */
+  .cta-section {
+    padding: 8rem 4rem;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-glow {
+    position: absolute;
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(255,107,43,0.1) 0%, transparent 70%);
+    left: 50%; top: 50%; transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800; letter-spacing: -0.04em;
+    line-height: 1; margin-bottom: 1.5rem;
+    position: relative; z-index: 1;
+  }
+  .cta-section p {
+    color: var(--muted); font-size: 1rem;
+    max-width: 400px; margin: 0 auto 3rem;
+    line-height: 1.7; position: relative; z-index: 1;
+  }
+  .cta-actions { display: flex; gap: 1rem; justify-content: center; position: relative; z-index: 1; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg);
+  }
+  .footer-left {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem; font-weight: 700;
+    color: var(--white);
+  }
+  .footer-left span { color: var(--orange); }
+  .footer-right { font-size: 0.8rem; color: var(--muted); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* SCROLL INDICATOR */
+  .scroll-hint {
+    position: absolute; bottom: 2.5rem; left: 4rem;
+    display: flex; align-items: center; gap: 0.7rem;
+    font-size: 0.75rem; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    opacity: 0; animation: fadeUp 0.7s ease 1.2s forwards;
+  }
+  .scroll-line {
+    width: 40px; height: 1px;
+    background: var(--border); position: relative; overflow: hidden;
+  }
+  .scroll-line::after {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: var(--orange);
+    animation: scanLine 2s ease-in-out infinite;
+  }
+  @keyframes scanLine {
+    0% { left: -100%; } 100% { left: 100%; }
+  }
+
+  /* COUNTER ANIMATION */
+  .count-up { display: inline-block; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 6rem 1.5rem 3rem; }
+    section { padding: 5rem 1.5rem; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); padding: 1.5rem; gap: 1.5rem; }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding: 0 0 1.5rem; }
+    .problem-inner, .models-header, .impact-grid, .models-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .steps, .features-grid { grid-template-columns: 1fr; }
+    .cta-section { padding: 5rem 1.5rem; }
+    footer { flex-direction: column; gap: 1rem; padding: 2rem 1.5rem; text-align: center; }
+    .cta-actions { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚡ Sigmoid<span>.</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#how">How It Works</a>
+    <a href="#models">ML Models</a>
+    <a href="#impact">Impact</a>
+    <a href="https://campus-energy-waste-detection-system.streamlit.app/" target="_blank" class="nav-cta">Launch App →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-tag">AMD Slingshot Hackathon · Team Sigmoid</div>
+
+  <h1>Stop paying for<br>energy <em>nobody</em><br>is <span class="accent">using.</span></h1>
+
+  <p class="hero-sub">
+    AI that watches your campus 24/7 and tells you exactly when, where, and why you're wasting electricity — down to the hour.
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://campus-energy-waste-detection-system.streamlit.app/" target="_blank" class="btn-primary">
+      Launch Live App
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <a href="https://github.com/RAK2315/Campus-Energy-Waste-Detection-System" target="_blank" class="btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num"><span class="count-up" data-target="5">0</span>%</div>
+    <div class="stat-label">of campus hours are wasteful</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num"><span class="count-up" data-target="203">0</span>%</div>
+    <div class="stat-label">excess load during waste events</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">0.<span class="count-up" data-target="897" data-decimal="true">0</span></div>
+    <div class="stat-label">R² forecast accuracy</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num"><span class="count-up" data-target="70">0</span>%</div>
+    <div class="stat-label">better than naive baseline</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="problem-inner">
+    <div class="reveal">
+      <div class="section-tag">The Problem</div>
+      <h2 class="section-title">Campuses are flying blind on energy.</h2>
+      <p class="section-sub">One bill at the end of the month. No idea which building, which hour, which system is responsible.</p>
+      <ul class="problem-points">
+        <li data-icon="🌙">Labs running at 3AM with nobody inside — nobody notices until the bill arrives</li>
+        <li data-icon="❄️">AC cooling empty buildings all weekend — treated as normal operating cost</li>
+        <li data-icon="⚡">Equipment peaks happening simultaneously — no load management whatsoever</li>
+        <li data-icon="💸">Enterprise monitoring tools cost lakhs + require hardware — out of reach for most campuses</li>
+      </ul>
+    </div>
+    <div class="reveal problem-visual">
+      <div class="waste-bars" id="wasteBars"></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="how">
+    <div class="reveal">
+      <div class="section-tag">How It Works</div>
+      <h2 class="section-title">Three steps.<br>Zero setup.</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Upload Your CSV</div>
+        <div class="step-desc">Just a timestamp column and a power column. That's it. No hardware, no API keys, no IT department needed.</div>
+        <div class="step-icon">📁</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">ML Runs Instantly</div>
+        <div class="step-desc">Isolation Forest retrains on your data and flags wasteful hours. Random Forest forecasts your next 24 hours. All in seconds.</div>
+        <div class="step-icon">🤖</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Act on Insights</div>
+        <div class="step-desc">See exactly which hours waste money, get per-student savings in ₹, and a 12-month ROI timeline for your campus.</div>
+        <div class="step-icon">📊</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ML MODELS -->
+<section class="models" id="models">
+  <div class="models-inner">
+    <div class="models-header">
+      <div class="reveal">
+        <div class="section-tag">Under The Hood</div>
+        <h2 class="section-title">Two models.<br>One pipeline.</h2>
+      </div>
+      <div class="reveal">
+        <p class="section-sub">Not rule-based thresholds. Not Excel formulas. Actual machine learning that adapts to your campus's own consumption patterns.</p>
+      </div>
+    </div>
+    <div class="models-grid reveal">
+      <div class="model-card">
+        <div class="model-tag">Anomaly Detection</div>
+        <div class="model-title">Isolation Forest</div>
+        <div class="model-desc">Learns what "normal" looks like for your campus specifically. Automatically retrains on every dataset you upload — so a hostel block and a lab block are judged by their own baselines, not each other's.</div>
+        <div style="margin-bottom:1rem">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem">Risk score output — every hour gets rated:</div>
+          <div style="display:flex;gap:0.4rem;align-items:center">
+            <div style="flex:1;height:6px;background:linear-gradient(90deg,#1a4a1a,#ff6b2b,#ff0000);border-radius:3px"></div>
+            <span style="font-size:0.75rem;color:var(--muted)">0 → 100</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:0.3rem">
+            <span>Safe</span><span>Wasteful</span>
+          </div>
+        </div>
+        <div class="model-metric">
+          <div class="model-metric-val">5%</div>
+          <div class="model-metric-label">of hours flagged as anomalies<br>on real campus data</div>
+        </div>
+      </div>
+      <div class="model-card">
+        <div class="model-tag">Forecasting</div>
+        <div class="model-title">Random Forest Regressor</div>
+        <div class="model-desc">Trained on 34,421 hours of real energy data. Uses lag features (1h, 24h, 1 week ago), rolling statistics, and cyclical time encodings to predict the next 24 hours hour by hour.</div>
+        <div style="margin-bottom:1rem">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">Top feature importances:</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <div style="display:flex;align-items:center;gap:0.7rem">
+              <div style="font-size:0.78rem;color:var(--muted);width:80px">HVAC</div>
+              <div style="flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden">
+                <div style="width:49%;height:100%;background:var(--orange)"></div>
+              </div>
+              <span style="font-size:0.75rem;color:var(--orange)">49%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.7rem">
+              <div style="font-size:0.78rem;color:var(--muted);width:80px">Lag 1h</div>
+              <div style="flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden">
+                <div style="width:17%;height:100%;background:var(--orange);opacity:0.6"></div>
+              </div>
+              <span style="font-size:0.75rem;color:var(--muted)">17%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.7rem">
+              <div style="font-size:0.78rem;color:var(--muted);width:80px">Sub-meter 2</div>
+              <div style="flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden">
+                <div style="width:10%;height:100%;background:var(--orange);opacity:0.4"></div>
+              </div>
+              <span style="font-size:0.75rem;color:var(--muted)">10%</span>
+            </div>
+          </div>
+        </div>
+        <div class="model-metric">
+          <div class="model-metric-val">0.897</div>
+          <div class="model-metric-label">R² on 6,885 held-out hours<br>70% better than naive baseline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="features-inner">
+    <div class="reveal">
+      <div class="section-tag">Features</div>
+      <h2 class="section-title">Everything in one dashboard.</h2>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <span class="feature-icon">🎯</span>
+        <div class="feature-title">Campus Energy Grade</div>
+        <div class="feature-desc">Instant A–F rating based on waste percentage. Shows at a glance where your campus stands.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🗓️</span>
+        <div class="feature-title">Waste Heatmap</div>
+        <div class="feature-desc">Hour × day grid showing exactly which combinations are worst. Darker = more waste.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔮</span>
+        <div class="feature-title">24-Hour Forecast</div>
+        <div class="feature-desc">RF-predicted consumption for tomorrow with confidence bands and hourly risk levels.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">💰</span>
+        <div class="feature-title">₹ Savings Calculator</div>
+        <div class="feature-desc">Daily, monthly, annual savings scaled to your campus size with per-student breakdown.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">Top 15 Worst Events</div>
+        <div class="feature-desc">Ranked table of worst hours with excess kW, risk score, and reason (night/weekend/spike).</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌍</span>
+        <div class="feature-title">CO₂ Impact</div>
+        <div class="feature-desc">Tonnes avoided, trees equivalent, homes powered — real environmental numbers, not estimates.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="impact" id="impact">
+  <div class="impact-inner">
+    <div class="reveal">
+      <div class="section-tag">Why It Matters</div>
+      <h2 class="section-title">Built for India.<br>Scaled for every campus.</h2>
+    </div>
+    <div class="impact-grid reveal">
+      <div class="impact-card">
+        <div class="impact-icon">🇮🇳</div>
+        <div>
+          <div class="impact-title">India-Specific Context</div>
+          <div class="impact-desc">₹ tariffs, BEE Green Campus Certification, India's 0.82 kg CO₂/kWh grid factor, and Net Zero 2070 alignment — not generic global stats.</div>
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">🆓</div>
+        <div>
+          <div class="impact-title">Zero Cost to Deploy</div>
+          <div class="impact-desc">Enterprise tools cost lakhs. This is free, open source, and works on any campus with just a CSV — no hardware, no licensing, no IT setup.</div>
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">🔄</div>
+        <div>
+          <div class="impact-title">Self-Adapting ML</div>
+          <div class="impact-desc">The Isolation Forest retrains on every dataset uploaded. A hostel block isn't judged by lab standards. Every campus gets its own baseline.</div>
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">📈</div>
+        <div>
+          <div class="impact-title">SDG Aligned</div>
+          <div class="impact-desc">Directly contributes to UN SDG #7 (Clean Energy) and SDG #13 (Climate Action). Improves NIRF and QS sustainability rankings.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="reveal">See your campus's<br><span style="color:var(--orange)">waste, live.</span></h2>
+  <p class="reveal">Upload a CSV. Get answers in seconds. No setup, no cost, no catch.</p>
+  <div class="cta-actions reveal">
+    <a href="https://campus-energy-waste-detection-system.streamlit.app/" target="_blank" class="btn-primary">
+      Launch the App
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <a href="https://github.com/RAK2315/Campus-Energy-Waste-Detection-System" target="_blank" class="btn-secondary">View Source Code</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">⚡ Sigmoid<span>.</span></div>
+  <div class="footer-right">AMD Slingshot Hackathon · Team Sigmoid · Leader: Rehaan</div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX + 'px';
+    cursor.style.top = mouseY + 'px';
+  });
+
+  function animateRing() {
+    ringX += (mouseX - ringX) * 0.12;
+    ringY += (mouseY - ringY) * 0.12;
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(2)';
+      ring.style.transform = 'translate(-50%,-50%) scale(1.4)';
+      ring.style.borderColor = 'rgba(255,107,43,0.6)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+      ring.style.transform = 'translate(-50%,-50%) scale(1)';
+      ring.style.borderColor = 'rgba(255,107,43,0.4)';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => observer.observe(r));
+
+  // Count up animation
+  function countUp(el) {
+    const target = parseInt(el.dataset.target);
+    const isDecimal = el.dataset.decimal;
+    const duration = 1500;
+    const start = performance.now();
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const val = Math.floor(eased * target);
+      el.textContent = isDecimal ? (val / 1000).toFixed(3).slice(2) : val;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  const countObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.count-up').forEach(countUp);
+        countObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stats-bar').forEach(el => countObserver.observe(el));
+
+  // Generate waste bars
+  const barsContainer = document.getElementById('wasteBars');
+  const heights = [45,60,35,80,55,90,40,75,50,95,45,70,38,85,52,78,42,88,60,72,48,65,82,55,92,44,68];
+  const wasteIndices = [4,8,9,13,17,18,24];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'waste-bar' + (wasteIndices.includes(i) ? ' red' : '');
+    bar.style.height = h + '%';
+    bar.style.animationDelay = (i * 0.04) + 's';
+    barsContainer.appendChild(bar);
+  });
+</script>
+</body>
+</html>
