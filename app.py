@@ -38,8 +38,8 @@ st.markdown("""
 }
 
 /* Hide default streamlit elements */
-#MainMenu, footer, header { visibility: hidden; }
-.stDeployButton { display: none; }
+#MainMenu, footer { visibility: hidden; }
+# .stDeployButton { display: none; }
 
 /* Sidebar */
 [data-testid="stSidebar"] {

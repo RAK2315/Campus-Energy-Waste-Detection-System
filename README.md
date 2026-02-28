@@ -3,7 +3,7 @@
 > AI that watches your campus energy 24/7 and tells you exactly where you're wasting money.
 > Built for **AMD Slingshot Hackathon**.
 
-🔗 **[Live Demo → campus-energy-waste-detection-system.streamlit.app](https://campus-energy-waste-detection-system.streamlit.app/)**
+🔗 **[Live Demo → WattWise](https://rak2315.github.io/Campus-Energy-Waste-Detection-System/#models)**
 
 ---
 
