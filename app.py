@@ -238,23 +238,37 @@ hr {
 ::-webkit-scrollbar-thumb { background: rgba(255,107,43,0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
 
-/* Fix sidebar collapse button always visible */
+/* Sidebar collapse/expand button — always visible */
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
-    background: var(--bg2) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--orange) !important;
+    opacity: 1 !important;
+    background: #1a1a25 !important;
+    border: 1px solid rgba(255,107,43,0.4) !important;
+    color: #ff6b2b !important;
+    z-index: 999 !important;
 }
-[data-testid="collapsedControl"]:hover {
-    background: var(--card) !important;
-    border-color: rgba(255,107,43,0.3) !important;
+[data-testid="collapsedControl"] svg {
+    fill: #ff6b2b !important;
+    color: #ff6b2b !important;
 }
-section[data-testid="stSidebar"][aria-expanded="false"] {
-    display: none !important;
+/* Sidebar expand arrow button */
+button[kind="header"],
+[data-testid="baseButton-header"],
+[data-testid="baseButton-headerNoPadding"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ff6b2b !important;
+    background: transparent !important;
 }
-button[data-testid="baseButton-headerNoPadding"] {
-    color: var(--orange) !important;
+/* Never hide the sidebar toggle */
+.st-emotion-cache-1n543e5,
+.st-emotion-cache-ue6h4q,
+[class*="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Fix emoji white background */
