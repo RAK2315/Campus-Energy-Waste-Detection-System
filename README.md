@@ -159,12 +159,9 @@ Supports most datetime formats automatically. Auto-resamples to hourly if data i
 
 ---
 
-## 🏆 AMD Slingshot Hackathon
+## Team
 
-Built to make energy intelligence accessible to every campus in India — not just the ones that can afford enterprise software.
-
----
-
-## 📄 License
-
-MIT — free to use, modify, and deploy.
+**Team Sigmoid**
+- Rehaan Ahmad Khan
+- Krishna Agarwaal  
+- Aditya Chauhan
